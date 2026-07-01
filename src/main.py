@@ -1,6 +1,9 @@
+import sys
+from pathlib import Path
 from fastapi import FastAPI
 from pydantic import BaseModel
-from backend.model_service import predict_complaint
+
+from src.utils import predict_complaint, train_models, CATEGORY_MODEL_PATH
 
 app = FastAPI(title="Public Grievance Urgency Microservice")
 
@@ -21,3 +24,19 @@ def root():
 @app.post("/predict", response_model=ComplaintResponse)
 def predict(request: ComplaintRequest):
     return predict_complaint(request.text)
+
+def run_training():
+    print("\n" + "="*60)
+    print("🚀 Starting Model Training...")
+    print("="*60 + "\n")
+    
+    _, _, category_results, _ = train_models()
+    
+    print("\n" + "="*60)
+    print(f"✅ Saved trained models to {CATEGORY_MODEL_PATH.parent}")
+    print("="*60 + "\n")
+    print("Sample predictions:")
+    print(category_results.head())
+
+if __name__ == "__main__":
+    run_training()

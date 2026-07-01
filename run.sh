@@ -30,7 +30,7 @@ trap cleanup SIGINT SIGTERM EXIT
 
 # Start backend server in background
 echo -e "${GREEN}Starting backend API on port 8000...${NC}"
-uvicorn backend.api:app --port 8000 > /tmp/backend.log 2>&1 &
+uvicorn src.main:app --port 8000 > /tmp/backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Give backend time to start
@@ -46,4 +46,4 @@ fi
 # Start frontend in foreground
 echo -e "${GREEN}Starting frontend on port 8501...${NC}\n"
 export STREAMLIT_SERVER_HEADLESS=true 
-streamlit run frontend/app.py --logger.level=warning
+streamlit run app/app.py --logger.level=warning

@@ -20,22 +20,67 @@ def load_grievance_data(path: str) -> pd.DataFrame:
 
 
 def load_category_mapping(mapping_path: Optional[str] = None) -> dict:
+    import json
     project_root = Path(__file__).resolve().parents[1]
+    
+    # 1. Try JSON cache first (extremely fast, <1ms)
+    json_cache_path = project_root / "src" / "category_mapping.json"
+    if json_cache_path.exists():
+        try:
+            with open(json_cache_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+
+    # 2. Try original Excel mapping if present
     mapping_path = Path(mapping_path or project_root / "CategoryCode_Mapping.xlsx")
-    if not mapping_path.exists():
-        return {}
-
-    try:
-        mapping_df = pd.read_excel(mapping_path, sheet_name="Complaint Category")
-    except Exception:
-        return {}
-
     mapping = {}
-    for _, row in mapping_df.dropna(subset=["Code", "Description"]).iterrows():
-        code = row["Code"]
-        description = str(row["Description"]).strip()
-        if pd.notna(code) and description:
-            mapping[str(int(float(code)))] = description
+    if mapping_path.exists():
+        try:
+            mapping_df = pd.read_excel(mapping_path, sheet_name="Complaint Category")
+            for _, row in mapping_df.dropna(subset=["Code", "Description"]).iterrows():
+                code = row["Code"]
+                description = str(row["Description"]).strip()
+                if pd.notna(code) and description:
+                    mapping[str(int(float(code)))] = description
+            
+            # Save to JSON cache
+            try:
+                json_cache_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(json_cache_path, "w", encoding="utf-8") as f:
+                    json.dump(mapping, f, indent=4)
+            except Exception:
+                pass
+                
+            return mapping
+        except Exception:
+            pass
+
+    # 3. Fallback: Extract dynamically from the dataset
+    dataset_path = project_root / "data" / "sample_or_raw_data.csv"
+    if dataset_path.exists():
+        try:
+            df = pd.read_csv(dataset_path, usecols=["CategoryV7", "subject_content_text"])
+            df = df.dropna(subset=["CategoryV7", "subject_content_text"])
+            for _, row in df.iterrows():
+                code_val = row["CategoryV7"]
+                subject = str(row["subject_content_text"])
+                if " >> " in subject:
+                    code = str(int(float(code_val)))
+                    category = subject.split(" >> ")[0].strip()
+                    if code not in mapping and category:
+                        mapping[code] = category
+            
+            # Save to JSON cache for instantaneous subsequent loads
+            try:
+                json_cache_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(json_cache_path, "w", encoding="utf-8") as f:
+                    json.dump(mapping, f, indent=4)
+            except Exception:
+                pass
+        except Exception:
+            pass
+            
     return mapping
 
 
@@ -77,6 +122,9 @@ def create_target_label(df: pd.DataFrame) -> pd.DataFrame:
             
         if normalized_text.replace(".", "", 1).isdigit():
             code = str(int(float(normalized_text)))
+            # If mapping is empty, just return the numeric code as string
+            if not mapping:
+                return code
             desc = mapping.get(code, "Unknown")
             desc_norm = re.sub(r"\s+", " ", desc.lower()).strip()
             if desc_norm in CATEGORY_TEXT_OVERRIDES:
