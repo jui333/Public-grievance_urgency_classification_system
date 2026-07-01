@@ -22,9 +22,23 @@ This project builds a complaint classification and urgency recommendation system
    - `streamlit run frontend/app.py`
 
 ## Notes
+## Dataset availability
+- The dataset files are not included in this repository.
+- Place the following files in the repository root before running the project:
+  - `CategoryCode_Mapping.xlsx`
+  - `no_pii_action_history.json`
+  - `no_pii_grievance.json`
+- Download the dataset from the provider link or shared source for this project.
 - The frontend uses the backend API at `http://127.0.0.1:8000/predict`.
 - The backend persists the trained model at `backend/category_model.joblib`.
 
 ## Notes
+## Dataset availability
+- The dataset files are not included in this repository.
+- Place the following files in the repository root before running the project:
+  - `CategoryCode_Mapping.xlsx`
+  - `no_pii_action_history.json`
+  - `no_pii_grievance.json`
+- Download the dataset from the provider link or shared source for this project.
 - The dataset files are already present in the repository root.
 - Notebooks are used for model exploration, while backend code is used for reusable logic.

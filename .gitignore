@@ -1,0 +1,16 @@
+# Python environment
+public_grievance_urgency_classification_system_venv/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Dataset files
+CategoryCode_Mapping.xlsx
+no_pii_action_history.json
+no_pii_grievance.json
+
+# Model artifacts
+backend/*.joblib
