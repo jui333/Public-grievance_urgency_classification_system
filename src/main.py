@@ -1,8 +1,9 @@
 import sys
-from pathlib import Path
+import pathlib
+# Ensure the project root (parent of src) is on PYTHONPATH for absolute imports
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from fastapi import FastAPI
 from pydantic import BaseModel
-
 from src.utils import predict_complaint, train_models, CATEGORY_MODEL_PATH
 
 app = FastAPI(title="Public Grievance Urgency Microservice")

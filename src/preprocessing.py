@@ -107,6 +107,11 @@ def create_target_label(df: pd.DataFrame) -> pd.DataFrame:
         "water issue": "Water Supply & Sewerage",
         "water cut": "Water Supply & Sewerage",
         "water supply issue": "Water Supply & Sewerage",
+        # New overrides for infrastructure related complaints
+        "broken street light": "Public Works / Civil Infrastructure",
+        "street light": "Public Works / Civil Infrastructure",
+        "traffic light": "Public Works / Civil Infrastructure",
+        "lamp post": "Public Works / Civil Infrastructure",
     }
 
     def normalize_category(value):

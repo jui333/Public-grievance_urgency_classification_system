@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.linear_model import LogisticRegression
 from tqdm import tqdm
 
 from src.preprocessing import (
@@ -49,11 +50,36 @@ def build_text_classifier(df: pd.DataFrame, text_column: str, target_column: str
     
     print(f"✓ Training set: {len(X_train)} samples, Test set: {len(X_test)} samples")
     print("🔧 Building and training model...")
-    
+    # Log class distribution for insight
+    from collections import Counter
+    class_counts = Counter(y_train)
+    print("📊 Training class distribution:")
+    for cls, cnt in class_counts.items():
+        print(f"   - {cls}: {cnt}")
+
+    # Build richer feature set: word n‑grams + character n‑grams
+    from sklearn.pipeline import FeatureUnion
+    word_vectorizer = TfidfVectorizer(
+        max_features=50000,
+        ngram_range=(1, 3),
+        sublinear_tf=True,
+        analyzer="word",
+    )
+    char_vectorizer = TfidfVectorizer(
+        max_features=30000,
+        ngram_range=(3, 5),
+        sublinear_tf=True,
+        analyzer="char_wb",
+    )
+    combined_features = FeatureUnion([("word", word_vectorizer), ("char", char_vectorizer)])
+
     pipeline = Pipeline(
         [
-            ("tfidf", TfidfVectorizer(max_features=20000, ngram_range=(1, 2), sublinear_tf=True)),
-            ("clf", CalibratedClassifierCV(LinearSVC(dual=False), cv=3)),
+            ("features", combined_features),
+            ("clf", CalibratedClassifierCV(
+                LogisticRegression(class_weight="balanced", max_iter=1000, n_jobs=-1),
+                cv=3,
+            )),
         ]
     )
     pipeline.fit(X_train, y_train)
