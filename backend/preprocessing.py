@@ -54,14 +54,27 @@ def create_target_label(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     mapping = load_category_mapping()
 
+    CATEGORY_TEXT_OVERRIDES = {
+        "nil availability": "Water Supply & Sewerage",
+        "no availability": "Water Supply & Sewerage",
+        "water shortage": "Water Supply & Sewerage",
+        "lack of water": "Water Supply & Sewerage",
+        "water issue": "Water Supply & Sewerage",
+        "water cut": "Water Supply & Sewerage",
+        "water supply issue": "Water Supply & Sewerage",
+    }
+
     def normalize_category(value):
         if pd.isna(value):
             return "Unknown"
         text_value = str(value).strip()
         if not text_value:
             return "Unknown"
-        if text_value.replace(".", "", 1).isdigit():
-            code = str(int(float(text_value)))
+        normalized_text = re.sub(r"\s+", " ", text_value.lower()).strip()
+        if normalized_text in CATEGORY_TEXT_OVERRIDES:
+            return CATEGORY_TEXT_OVERRIDES[normalized_text]
+        if normalized_text.replace(".", "", 1).isdigit():
+            code = str(int(float(normalized_text)))
             return mapping.get(code, "Unknown")
         return text_value
 
@@ -80,9 +93,24 @@ def map_urgency_label(df: pd.DataFrame) -> pd.DataFrame:
     def urgency_rules(text: str, category) -> str:
         text = str(text or "")
         category = str(category or "")
+        text_lower = text.lower()
+
+        water_critical_keywords = [
+            "water shortage",
+            "no water",
+            "water cut",
+            "dry tap",
+            "tap dry",
+            "nil availability",
+            "no availability",
+            "water outage",
+            "no drinking water",
+        ]
         high_keywords = ["fire", "fraud", "accident", "danger", "urgent", "security", "illegal", "death"]
         medium_keywords = ["delay", "service", "request", "support", "help", "issue"]
-        text_lower = text.lower()
+
+        if any(word in text_lower for word in water_critical_keywords):
+            return "High"
         if any(word in text_lower for word in high_keywords):
             return "High"
         if any(word in text_lower for word in medium_keywords):
