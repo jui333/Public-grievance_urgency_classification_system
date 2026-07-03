@@ -11,6 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 def build_text_classifier(df: pd.DataFrame, text_column: str, target_column: str) -> Tuple[Pipeline, pd.DataFrame]:
+    print(f"\n📊 Processing data for {target_column}...")
     df = df[[text_column, target_column]].dropna().copy()
     df = df[df[target_column].astype(str).str.len() > 2]
     df = df[df[target_column].astype(str) != "Unknown"]
@@ -18,24 +19,35 @@ def build_text_classifier(df: pd.DataFrame, text_column: str, target_column: str
         df = df.sample(12000, random_state=42)
     elif len(df) < 200:
         raise ValueError("Not enough labeled data for training.")
+    
+    print(f"✓ Data loaded: {len(df)} samples")
 
     X = df[text_column].astype(str)
     y = df[target_column].astype(str)
+    
+    print("📈 Splitting data into train/test sets...")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    print(f"✓ Training set: {len(X_train)} samples, Test set: {len(X_test)} samples")
+    print("🔧 Building and training model...")
+    
     pipeline = Pipeline(
         [
             ("tfidf", TfidfVectorizer(max_features=5000, ngram_range=(1, 2), sublinear_tf=True)),
-            ("clf", LinearSVC(class_weight="balanced")),
+            ("clf", LinearSVC(class_weight="balanced", verbose=1)),
         ]
     )
     pipeline.fit(X_train, y_train)
+    
+    print("🔍 Evaluating model on test set...")
     predictions = pipeline.predict(X_test)
     accuracy = accuracy_score(y_test, predictions)
     f1 = f1_score(y_test, predictions, average="weighted", zero_division=0)
     results = pd.DataFrame({"text": X_test, "actual": y_test, "predicted": predictions})
     results.reset_index(drop=True, inplace=True)
-    print(f"Accuracy: {accuracy:.3f}")
-    print(f"Weighted F1: {f1:.3f}")
+    print(f"\n✅ {target_column.replace('_', ' ').title()}")
+    print(f"   Accuracy: {accuracy:.3f}")
+    print(f"   Weighted F1: {f1:.3f}\n")
     return pipeline, results
 
 
