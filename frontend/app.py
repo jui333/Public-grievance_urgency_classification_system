@@ -36,11 +36,13 @@ def main():
             result = response.json()
 
             st.markdown("### Prediction")
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric("Category", result["category"])
             with col2:
                 st.metric("Urgency", result["urgency"])
+            with col3:
+                st.metric("Confidence", result.get("confidence", "N/A"))
 
             st.success(result["action"])
             st.info(result["explanation"])

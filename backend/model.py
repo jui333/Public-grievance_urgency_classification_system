@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.calibration import CalibratedClassifierCV
 
 
 def build_text_classifier(df: pd.DataFrame, text_column: str, target_column: str) -> Tuple[Pipeline, pd.DataFrame]:
@@ -15,10 +16,14 @@ def build_text_classifier(df: pd.DataFrame, text_column: str, target_column: str
     df = df[[text_column, target_column]].dropna().copy()
     df = df[df[target_column].astype(str).str.len() > 2]
     df = df[df[target_column].astype(str) != "Unknown"]
-    if len(df) > 12000:
-        df = df.sample(12000, random_state=42)
+    if len(df) > 25000:
+        df = df.sample(25000, random_state=42)
     elif len(df) < 200:
         raise ValueError("Not enough labeled data for training.")
+        
+    # Keep only classes with at least 10 examples to support CV splits in train_test_split
+    counts = df[target_column].value_counts()
+    df = df[df[target_column].isin(counts[counts >= 10].index)]
     
     print(f"✓ Data loaded: {len(df)} samples")
 
@@ -26,15 +31,15 @@ def build_text_classifier(df: pd.DataFrame, text_column: str, target_column: str
     y = df[target_column].astype(str)
     
     print("📈 Splitting data into train/test sets...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
     
     print(f"✓ Training set: {len(X_train)} samples, Test set: {len(X_test)} samples")
     print("🔧 Building and training model...")
     
     pipeline = Pipeline(
         [
-            ("tfidf", TfidfVectorizer(max_features=5000, ngram_range=(1, 2), sublinear_tf=True)),
-            ("clf", LinearSVC(class_weight="balanced", verbose=1)),
+            ("tfidf", TfidfVectorizer(max_features=20000, ngram_range=(1, 2), sublinear_tf=True)),
+            ("clf", CalibratedClassifierCV(LinearSVC(dual=False), cv=3)),
         ]
     )
     pipeline.fit(X_train, y_train)

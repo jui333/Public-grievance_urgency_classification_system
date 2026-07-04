@@ -71,11 +71,18 @@ def create_target_label(df: pd.DataFrame) -> pd.DataFrame:
         if not text_value:
             return "Unknown"
         normalized_text = re.sub(r"\s+", " ", text_value.lower()).strip()
+        
         if normalized_text in CATEGORY_TEXT_OVERRIDES:
             return CATEGORY_TEXT_OVERRIDES[normalized_text]
+            
         if normalized_text.replace(".", "", 1).isdigit():
             code = str(int(float(normalized_text)))
-            return mapping.get(code, "Unknown")
+            desc = mapping.get(code, "Unknown")
+            desc_norm = re.sub(r"\s+", " ", desc.lower()).strip()
+            if desc_norm in CATEGORY_TEXT_OVERRIDES:
+                return CATEGORY_TEXT_OVERRIDES[desc_norm]
+            return desc
+            
         return text_value
 
     if "CategoryV7" in df.columns:
@@ -105,8 +112,9 @@ def map_urgency_label(df: pd.DataFrame) -> pd.DataFrame:
             "no availability",
             "water outage",
             "no drinking water",
+            "water supply",
         ]
-        high_keywords = ["fire", "fraud", "accident", "danger", "urgent", "security", "illegal", "death"]
+        high_keywords = ["fire", "fraud", "accident", "danger", "urgent", "security", "illegal", "death", "cut off"]
         medium_keywords = ["delay", "service", "request", "support", "help", "issue"]
 
         if any(word in text_lower for word in water_critical_keywords):

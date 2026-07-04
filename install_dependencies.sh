@@ -13,4 +13,10 @@ echo "Installing dependencies..."
 public_grievance_urgency_classification_system_venv/bin/pip install --upgrade pip
 public_grievance_urgency_classification_system_venv/bin/pip install -r requirements.txt
 
+echo "Configuring Streamlit to skip email prompt..."
+mkdir -p ~/.streamlit
+if [ ! -f ~/.streamlit/credentials.toml ]; then
+    echo -e "[general]\nemail = \"\"" > ~/.streamlit/credentials.toml
+fi
+
 echo "Dependencies installed successfully!"

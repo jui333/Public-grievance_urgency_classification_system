@@ -48,23 +48,60 @@ def resolve_emergency_category(text: str, predicted_category: str) -> str:
     return predicted_category
 
 
-def format_recommendation(category: str, urgency: str) -> Dict[str, str]:
+def format_recommendation(category: str, urgency: str, confidence_str: str, override: bool) -> Dict[str, str]:
     action = CATEGORY_TO_ACTION.get(
         category,
         "Review this complaint and assign it to the correct grievance officer.",
     )
+    
+    timeline = ""
+    if urgency == "High":
+        timeline = "🚨 URGENT (Resolve within 24 hours) - "
+    elif urgency == "Medium":
+        timeline = "⏳ MEDIUM (Resolve within 3 days) - "
+    elif urgency == "Low":
+        timeline = "✅ LOW (Resolve within 7 days) - "
+        
+    action = timeline + action
+    explanation = f"This complaint is classified as {category} with {urgency} urgency."
+    if override:
+        explanation += " Escalated automatically due to emergency keywords."
+        
     return {
         "category": category,
         "urgency": urgency,
         "action": action,
-        "explanation": f"This complaint is classified as {category} with {urgency} urgency.",
+        "explanation": explanation,
+        "confidence": confidence_str
     }
 
 
-def analyze_complaint(text: str, category_model, urgency_label: str) -> Dict[str, str]:
+def analyze_complaint(text: str, category_model, urgency_model) -> Dict[str, str]:
+    if len(text.strip()) < 10:
+        return {
+            "category": "Unknown",
+            "urgency": "Unknown",
+            "action": "Please provide a more detailed complaint for accurate classification.",
+            "explanation": "The text provided is too short to analyze.",
+            "confidence": "N/A"
+        }
+
     cleaned = clean_text(text)
-    predicted_category = category_model.predict([cleaned])[0]
+    
+    cat_pred = category_model.predict([cleaned])[0]
+    cat_proba = category_model.predict_proba([cleaned])[0].max()
+    
+    urg_pred = urgency_model.predict([cleaned])[0]
+    urg_proba = urgency_model.predict_proba([cleaned])[0].max()
+    
+    override = False
     if detect_emergency(text):
-        predicted_category = resolve_emergency_category(text, predicted_category)
-        urgency_label = "High"
-    return format_recommendation(predicted_category, urgency_label)
+        cat_pred = resolve_emergency_category(text, cat_pred)
+        urg_pred = "High"
+        urg_proba = 1.0
+        override = True
+        
+    avg_confidence = (cat_proba + urg_proba) / 2
+    confidence_str = f"{avg_confidence * 100:.1f}%"
+    
+    return format_recommendation(cat_pred, urg_pred, confidence_str, override)

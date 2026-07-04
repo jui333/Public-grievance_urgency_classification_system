@@ -45,4 +45,5 @@ fi
 
 # Start frontend in foreground
 echo -e "${GREEN}Starting frontend on port 8501...${NC}\n"
+export STREAMLIT_SERVER_HEADLESS=true
 streamlit run frontend/app.py --logger.level=warning

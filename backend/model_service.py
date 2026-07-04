@@ -52,4 +52,4 @@ def get_urgency_model():
 def predict_complaint(text: str) -> dict:
     category_model = get_category_model()
     urgency_model = get_urgency_model()
-    return analyze_complaint(text, category_model, urgency_model.predict([clean_text(text)])[0])
+    return analyze_complaint(text, category_model, urgency_model)

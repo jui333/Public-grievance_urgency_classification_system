@@ -12,6 +12,7 @@ class ComplaintResponse(BaseModel):
     urgency: str
     action: str
     explanation: str
+    confidence: str
 
 @app.get("/")
 def root():
