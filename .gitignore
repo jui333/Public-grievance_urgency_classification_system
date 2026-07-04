@@ -50,3 +50,4 @@ Thumbs.db
 CategoryCode_Mapping.xlsx
 no_pii_grievance.json
 no_pii_action_history.json
+backend/*.joblib
