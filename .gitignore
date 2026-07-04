@@ -1,16 +1,47 @@
-# Python environment
-public_grievance_urgency_classification_system_venv/
-.venv/
-venv/
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
 
-# Dataset files
-CategoryCode_Mapping.xlsx
-no_pii_action_history.json
-no_pii_grievance.json
+# C extensions
+*.so
 
-# Model artifacts
-backend/*.joblib
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environment
+public_grievance_urgency_classification_system_venv/
+
+# Model files
+*.joblib
+
+# IDE / Editor files
+.idea/
+.vscode/
+
+# Streamlit credentials
+.streamlit/
+
+# OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
