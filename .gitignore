@@ -45,3 +45,8 @@ public_grievance_urgency_classification_system_venv/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# dataset
+CategoryCode_Mapping.xlsx
+no_pii_grievance.json
+no_pii_action_history.json
