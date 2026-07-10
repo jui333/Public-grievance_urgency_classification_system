@@ -1,0 +1,10 @@
+pandas
+numpy
+scikit-learn
+streamlit
+openpyxl
+fastapi
+uvicorn
+joblib
+tqdm
+reportlab
